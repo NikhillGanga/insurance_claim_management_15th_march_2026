@@ -4,7 +4,7 @@
 
 <struts>
 
-    <constant name="struts.devMode" value="true"/>
+    <constant name="struts.devMode" value="false"/>
     <constant name="struts.objectFactory" value="spring"/>
 
     <package name="default" namespace="/" extends="json-default">
@@ -48,13 +48,12 @@
 
 
 
-        <action name="saveClaim"
-                class="com.claim.action.ClaimAction"
-                method="saveClaim">
+        <action name="saveClaim" class="com.claim.action.ClaimAction">
 
-            <result type="json"/>
+    <result name="success" type="json"/>
+    <result name="input" type="json"/>
 
-        </action>
+</action>
 
 
 

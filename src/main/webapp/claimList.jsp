@@ -95,7 +95,7 @@ function submitClaim(id) {
         url : "submitClaim.action",
         type : "POST",
         data : { id: id },
-        success : function() { alert("Claim Submitted"); loadClaims(); }
+        success : function() {  loadClaims(); }
     });
 }
 
@@ -104,7 +104,7 @@ function approveClaim(id) {
         url : "approveClaim.action",
         type : "POST",
         data : { id: id },
-        success : function() { alert("Claim Approved"); loadClaims(); }
+        success : function() {  loadClaims(); }
     });
 }
 
@@ -114,7 +114,7 @@ function deleteClaim(id) {
         url : "deleteClaim.action",
         type : "POST",
         data : { id: id },
-        success : function() { alert("Claim Deleted"); loadClaims(); }
+        success : function() { loadClaims(); }
     });
 }
 
