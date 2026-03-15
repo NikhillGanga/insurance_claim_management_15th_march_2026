@@ -29,7 +29,7 @@ public class ClaimDAOImpl implements ClaimDAO {
 
         Session session = HibernateUtil.getSessionFactory().openSession();
 
-        List<Claim> list = session.createQuery("from Claim", Claim.class).list();
+        List<Claim> list = session.createQuery("from Claim order by id desc", Claim.class).list();
 
         session.close();
 

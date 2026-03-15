@@ -53,9 +53,9 @@ public class ClaimAction extends ActionSupport {
 
         if (user != null) {
             if ("CSR".equalsIgnoreCase(user.getRole()) && "NEW".equalsIgnoreCase(claim.getStatus())) {
-                // CSR edits NEW claim → status stays NEW
+               
             } else if ("MANAGER".equalsIgnoreCase(user.getRole())) {
-                // Manager edits → claim status becomes OPEN
+               
                 claim.setStatus("OPEN");
             } else {
                 return ERROR; 
@@ -83,14 +83,23 @@ public class ClaimAction extends ActionSupport {
     
 
     public String submitClaim() {
+
         HttpSession session = ServletActionContext.getRequest().getSession();
         User user = (User) session.getAttribute("user");
 
-        if (user != null && "CSR".equalsIgnoreCase(user.getRole()) && "NEW".equalsIgnoreCase(claim.getStatus())) {
-            claim.setStatus("OPEN");
-            claimService.updateClaim(claim);
+        if (user != null && "CSR".equalsIgnoreCase(user.getRole())) {
+
+            Claim existingClaim = claimService.getClaimById(id);
+
+            if (existingClaim != null && "NEW".equalsIgnoreCase(existingClaim.getStatus())) {
+
+                existingClaim.setStatus("OPEN");
+                claimService.updateClaim(existingClaim);
+
+                System.out.println("Claim submitted: " + existingClaim.getId() +
+                        " by user: " + user.getUsername());
+            }
         }
-        System.out.println("Claim submitted: " + claim.getId() + " by user: " + user.getUsername());
 
         return SUCCESS;
     }
