@@ -1,0 +1,119 @@
+<!DOCTYPE struts PUBLIC
+ "-//Apache Software Foundation//DTD Struts Configuration 2.5//EN"
+ "http://struts.apache.org/dtds/struts-2.5.dtd">
+
+<struts>
+
+    <constant name="struts.devMode" value="true"/>
+    <constant name="struts.objectFactory" value="spring"/>
+
+    <package name="default" namespace="/" extends="json-default">
+
+
+        <interceptors>
+
+            <interceptor name="authInterceptor"
+                class="com.claim.interceptor.AuthInterceptor"/>
+
+            <interceptor-stack name="authStack">
+                <interceptor-ref name="authInterceptor"/>
+                <interceptor-ref name="defaultStack"/>
+            </interceptor-stack>
+
+        </interceptors>
+
+        <default-interceptor-ref name="authStack"/>
+
+
+
+        <action name="login"
+                class="com.claim.action.LoginAction"
+                method="login">
+
+            <interceptor-ref name="defaultStack"/>
+
+            <result type="json"/>
+
+        </action>
+
+
+
+        <action name="logout"
+                class="com.claim.action.LoginAction"
+                method="logout">
+
+            <result type="json"/>
+
+        </action>
+
+
+
+        <action name="saveClaim"
+                class="com.claim.action.ClaimAction"
+                method="saveClaim">
+
+            <result type="json"/>
+
+        </action>
+
+
+
+        <action name="getAllClaims"
+                class="com.claim.action.ClaimAction"
+                method="listClaims">
+
+            <result type="json"/>
+
+        </action>
+
+
+
+        <action name="getClaimById"
+                class="com.claim.action.ClaimAction"
+                method="editClaim">
+
+            <result type="json">
+                <param name="root">claim</param>
+            </result>
+
+        </action>
+
+
+
+        <action name="updateClaim"
+                class="com.claim.action.ClaimAction"
+                method="updateClaim">
+
+            <result type="json"/>
+
+        </action>
+
+
+
+        <action name="deleteClaim"
+                class="com.claim.action.ClaimAction"
+                method="deleteClaim">
+
+            <result type="json"/>
+
+        </action>
+
+
+
+        <action name="approveClaim"
+                class="com.claim.action.ClaimAction"
+                method="approveClaim">
+
+            <result type="json"/>
+          </action>
+          
+           <action name="submitClaim"
+                class="com.claim.action.ClaimAction"
+                method="submitClaim">
+                
+                <result type="json"/>
+                </action>
+
+    </package>
+
+</struts>
