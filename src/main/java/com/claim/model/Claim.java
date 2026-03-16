@@ -15,6 +15,11 @@ public class Claim {
 
 	private String claimNumber;
 
+    @PostPersist
+    public void generateClaimNumber() {
+        this.claimNumber = "CLM" + (1000 + id);
+    }
+
 	private Date accidentDate;
 
 	private String accidentAddress;
@@ -87,6 +92,8 @@ public class Claim {
 				+ ", accidentAddress=" + accidentAddress + ", claimantName=" + claimantName + ", claimantDob="
 				+ claimantDob + ", status=" + status + "]";
 	}
+	
+	
 	
 
 }

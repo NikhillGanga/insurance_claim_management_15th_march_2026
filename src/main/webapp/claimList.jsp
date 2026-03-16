@@ -11,119 +11,238 @@ boolean isCSR = user != null && "CSR".equalsIgnoreCase(user.getRole());
 <html>
 <head>
 <title>Claims</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+
+<link rel="stylesheet"
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 </head>
 
 <body class="container mt-4">
 
-<h2>Claim Management</h2>
+	<h2>Claim Management</h2>
 
-<c:if test="${isCSR}">
-    <a href="claimForm.jsp" class="btn btn-primary">Create Claim</a>
-</c:if>
+	<%
+	if (isCSR) {
+	%>
+	<a href="claimForm.jsp" class="btn btn-primary">Create Claim</a>
+	<%
+	}
+	%>
 
-<button class="btn btn-danger float-end" onclick="logout()">Logout</button>
-<br><br>
+	<button class="btn btn-danger float-end" onclick="logout()">Logout</button>
 
-<table class="table table-bordered">
-    <thead class="table-dark">
-        <tr>
-            <th>ID</th>
-            <th>Claim Number</th>
-            <th>Name</th>
-            <th>Address</th>
-            <th>Status</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody id="claimTable"></tbody>
-</table>
+	<br>
+	<br>
 
-<script>
-$(document).ready(function() {
-    loadClaims();
-});
+	<table class="table table-bordered">
 
-function loadClaims() {
-    $.ajax({
-        url : "getAllClaims.action",
-        success : function(res) {
-            let rows = "";
-            res.claims.forEach(function(c) {
-                let badge = "";
-                if (c.status === "NEW") badge = "<span class='badge bg-warning'>NEW</span>";
-                if (c.status === "OPEN") badge = "<span class='badge bg-info'>OPEN</span>";
-                if (c.status === "APPROVED") badge = "<span class='badge bg-success'>APPROVED</span>";
+		<thead class="table-dark">
+			<tr>
+				<th>ID</th>
+				<th>Claim Number</th>
+				<th>Name</th>
+				<th>Address</th>
+				<th>Status</th>
+				<th>Since Accident (Days)</th>
+				<th>Actions</th>
+			</tr>
+		</thead>
 
-                rows += "<tr>";
-                rows += "<td>" + c.id + "</td>";
-                rows += "<td>" + c.claimNumber + "</td>";
-                rows += "<td>" + c.claimantName + "</td>";
-                rows += "<td>" + c.accidentAddress + "</td>";
-                rows += "<td>" + badge + "</td>";
-                rows += "<td>";
+		<tbody id="claimTable"></tbody>
 
-                <% if (isCSR) { %>
-                    if (c.status === "NEW") {
-                        rows += "<button class='btn btn-secondary btn-sm me-2' onclick='editClaim("+c.id+")'>Edit</button>";
-                        rows += "<button class='btn btn-primary btn-sm me-2' onclick='submitClaim("+c.id+")'>Submit</button>";
-                    }
-                <% } %>
+	</table>
 
-                <% if (isManager) { %>
-                    if (c.status !== "APPROVED") {
-                        rows += "<button class='btn btn-warning btn-sm me-2' onclick='editClaim("+c.id+")'>Edit</button>";
-                        rows += "<button class='btn btn-success btn-sm me-2' onclick='approveClaim("+c.id+")'>Approve</button>";
-                    }
-                <% } %>
+	<script>
+		$(document).ready(function() {
 
-                rows += "<button class='btn btn-danger btn-sm' onclick='deleteClaim("+c.id+")'>Delete</button>";
-                rows += "</td>";
-                rows += "</tr>";
-            });
+			loadClaims();
 
-            $("#claimTable").html(rows);
-        }
-    });
-}
+			setInterval(function() {
+				loadClaims();
+			}, 5000);
 
-function editClaim(id) { window.location = "claimForm.jsp?id=" + id; }
+		});
 
-function submitClaim(id) {
-    $.ajax({
-        url : "submitClaim.action",
-        type : "POST",
-        data : { id: id },
-        success : function() {  loadClaims(); }
-    });
-}
+		function loadClaims() {
 
-function approveClaim(id) {
-    $.ajax({
-        url : "approveClaim.action",
-        type : "POST",
-        data : { id: id },
-        success : function() {  loadClaims(); }
-    });
-}
+			$
+					.ajax({
 
-function deleteClaim(id) {
-    if (!confirm("Delete claim?")) return;
-    $.ajax({
-        url : "deleteClaim.action",
-        type : "POST",
-        data : { id: id },
-        success : function() { loadClaims(); }
-    });
-}
+						url : "getAllClaims.action",
 
-function logout() {
-    $.ajax({
-        url : "logout.action",
-        success : function() { window.location = "login.jsp"; }
-    });
-}
-</script>
+						success : function(res) {
+
+							let rows = "";
+
+							res.claims
+									.forEach(function(c) {
+
+										let badge = "";
+
+										if (c.status === "NEW")
+											badge = "<span class='badge bg-warning'>NEW</span>";
+
+										if (c.status === "OPEN")
+											badge = "<span class='badge bg-info'>OPEN</span>";
+
+										if (c.status === "APPROVED")
+											badge = "<span class='badge bg-success'>APPROVED</span>";
+
+										let accidentDate = new Date(
+												c.accidentDate);
+										let today = new Date();
+
+										let diffTime = today - accidentDate;
+										let diffDays = Math.floor(diffTime
+												/ (1000 * 60 * 60 * 24));
+
+										rows += "<tr>";
+
+										rows += "<td>" + c.id + "</td>";
+										rows += "<td>" + c.claimNumber
+												+ "</td>";
+										rows += "<td>" + c.claimantName
+												+ "</td>";
+										rows += "<td>" + c.accidentAddress
+												+ "</td>";
+										rows += "<td>" + badge + "</td>";
+										rows += "<td>" + diffDays
+												+ " days</td>";
+
+										rows += "<td>";
+	<%if (isCSR) {%>
+		if (c.status === "NEW") {
+
+											rows += "<button class='btn btn-secondary btn-sm me-2' onclick='editClaim("
+													+ c.id + ")'>Edit</button>";
+
+											rows += "<button class='btn btn-primary btn-sm me-2' onclick='submitClaim("
+													+ c.id
+													+ ")'>Submit</button>";
+
+										} else {
+
+											rows += "<span class='text-danger fw-bold'>Edit action not allowed</span>";
+
+										}
+	<%}%>
+		
+	<%if (isManager) {%>
+		if (c.status !== "APPROVED") {
+
+											rows += "<button class='btn btn-warning btn-sm me-2' onclick='editClaim("
+													+ c.id + ")'>Edit</button>";
+
+											rows += "<button class='btn btn-success btn-sm me-2' onclick='approveClaim("
+													+ c.id
+													+ ")'>Approve</button>";
+
+										}
+	<%}%>
+		rows += "<button class='btn btn-danger btn-sm' onclick='deleteClaim("
+												+ c.id + ")'>Delete</button>";
+
+										rows += "</td>";
+
+										rows += "</tr>";
+
+									});
+
+							$("#claimTable").html(rows);
+
+						}
+
+					});
+
+		}
+
+		function editClaim(id) {
+
+			window.location = "claimForm.jsp?id=" + id;
+
+		}
+
+		function submitClaim(id) {
+
+			$.ajax({
+
+				url : "submitClaim.action",
+				type : "POST",
+				data : {
+					id : id
+				},
+
+				success : function() {
+
+					loadClaims();
+
+				}
+
+			});
+
+		}
+
+		function approveClaim(id) {
+
+			$.ajax({
+
+				url : "approveClaim.action",
+				type : "POST",
+				data : {
+					id : id
+				},
+
+				success : function() {
+
+					loadClaims();
+
+				}
+
+			});
+
+		}
+
+		function deleteClaim(id) {
+
+			if (!confirm("Delete claim?"))
+				return;
+
+			$.ajax({
+
+				url : "deleteClaim.action",
+				type : "POST",
+				data : {
+					id : id
+				},
+
+				success : function() {
+
+					loadClaims();
+
+				}
+
+			});
+
+		}
+
+		function logout() {
+
+			$.ajax({
+
+				url : "logout.action",
+
+				success : function() {
+
+					window.location = "login.jsp";
+
+				}
+
+			});
+
+		}
+	</script>
+
 </body>
 </html>

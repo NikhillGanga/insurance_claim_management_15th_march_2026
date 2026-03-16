@@ -13,11 +13,13 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <style>
+
 .field-error{
     color:red;
     font-size:14px;
     margin-top:3px;
 }
+
 </style>
 
 </head>
@@ -29,11 +31,6 @@
 <input type="hidden" id="id">
 
 <div class="card p-4">
-
-<label>Claim Number</label>
-<input type="text" id="claimNumber" class="form-control">
-<div class="field-error" id="claimNumberError"></div>
-<br>
 
 <label>Accident Date</label>
 <input type="date" id="accidentDate" class="form-control">
@@ -55,7 +52,7 @@
 <div class="field-error" id="claimantDobError"></div>
 <br>
 
-<button class="btn btn-success" onclick="saveOrUpdate()">Save</button>
+<button type="button" class="btn btn-success" onclick="saveOrUpdate()">Save</button>
 <a href="claimList.jsp" class="btn btn-secondary">Back</a>
 
 </div>
@@ -73,18 +70,19 @@ $(document).ready(function(){
 
 });
 
+
 function loadClaim(id){
 
     $.ajax({
 
         url:"getClaimById.action",
-
         data:{id:id},
 
         success:function(c){
 
+            console.log("Loaded claim:",c);
+
             $("#id").val(c.id);
-            $("#claimNumber").val(c.claimNumber);
             $("#accidentAddress").val(c.accidentAddress);
             $("#claimantName").val(c.claimantName);
 
@@ -100,27 +98,107 @@ function loadClaim(id){
 
 }
 
+
 function clearErrors(){
     $(".field-error").text("");
 }
 
-function saveOrUpdate(){
+
+function validateForm(){
 
     clearErrors();
+
+    let valid = true;
+
+    let accidentDate = $("#accidentDate").val();
+    let accidentAddress = $("#accidentAddress").val().trim();
+    let claimantName = $("#claimantName").val().trim();
+    let claimantDob = $("#claimantDob").val();
+
+    let today = new Date();
+    today.setHours(0,0,0,0);
+
+
+    if(accidentAddress === ""){
+        $("#accidentAddressError").text("Accident Address is required");
+        valid = false;
+    }
+
+    if(claimantName === ""){
+        $("#claimantNameError").text("Claimant Name is required");
+        valid = false;
+    }
+
+    if(accidentDate === ""){
+        $("#accidentDateError").text("Accident Date is required");
+        valid = false;
+    }
+    else{
+
+        let accDate = new Date(accidentDate);
+
+        if(accDate > today){
+            $("#accidentDateError").text("Accident date cannot be in the future");
+            valid = false;
+        }
+
+    }
+
+    if(claimantDob === ""){
+        $("#claimantDobError").text("Date of Birth is required");
+        valid = false;
+    }
+    else{
+
+        let dob = new Date(claimantDob);
+
+        if(dob > today){
+            $("#claimantDobError").text("Date of Birth cannot be in the future");
+            valid = false;
+        }
+        else{
+
+            let age = today.getFullYear() - dob.getFullYear();
+            let m = today.getMonth() - dob.getMonth();
+
+            if(m < 0 || (m === 0 && today.getDate() < dob.getDate())){
+                age--;
+            }
+
+            if(age < 18){
+                $("#claimantDobError").text("Claimant must be at least 18 years old");
+                valid = false;
+            }
+
+        }
+
+    }
+
+    return valid;
+
+}
+
+
+function saveOrUpdate(){
+
+    if(!validateForm()){
+        return;
+    }
+
+    console.log("Submitting form...");
 
     let id = $("#id").val();
     let url = id ? "updateClaim.action" : "saveClaim.action";
 
+
     $.ajax({
 
         url:url,
-
         type:"POST",
 
         data:{
 
             "claim.id":id,
-            "claim.claimNumber":$("#claimNumber").val(),
             "claim.accidentAddress":$("#accidentAddress").val(),
             "claim.accidentDate":$("#accidentDate").val(),
             "claim.claimantName":$("#claimantName").val(),
@@ -129,6 +207,8 @@ function saveOrUpdate(){
         },
 
         success:function(res){
+
+            console.log("Response:",res);
 
             if(res.fieldErrors){
 
@@ -139,12 +219,19 @@ function saveOrUpdate(){
 
                 });
 
-            }else{
+            }
+            else{
 
+                alert("Claim saved successfully");
                 window.location="claimList.jsp";
 
             }
 
+        },
+
+        error:function(err){
+            console.log("Error:",err);
+            alert("Something went wrong");
         }
 
     });

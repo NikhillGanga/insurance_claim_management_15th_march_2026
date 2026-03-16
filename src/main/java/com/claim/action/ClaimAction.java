@@ -18,145 +18,119 @@ import com.opensymphony.xwork2.ActionSupport;
 @Component
 public class ClaimAction extends ActionSupport {
 
-    private Claim claim;
-    private List<Claim> claims;
-    private int id;
-   
+	private Claim claim;
+	private List<Claim> claims;
+	private int id;
 
-    @Autowired
-    private ClaimService claimService;
-    
-    public Map<String, List<String>> getFieldErrors() {
-        return super.getFieldErrors();
-    }
- 
-    public String saveClaim() {
-    	
-    	if (hasFieldErrors()) {
-            return INPUT;
-        }
-    	
-        HttpSession session = ServletActionContext.getRequest().getSession();
-        User user = (User) session.getAttribute("user");
+	@Autowired
+	private ClaimService claimService;
 
-        if (user != null && "CSR".equalsIgnoreCase(user.getRole())) {
-            claim.setStatus("NEW"); 
-        }
+	public Map<String, List<String>> getFieldErrors() {
+		return super.getFieldErrors();
+	}
 
-        claimService.saveClaim(claim);
-        return SUCCESS;
-    }
-    
-  
-	/*
-	 * public void validateSaveClaim() {
-	 * 
-	 * Date today = new Date();
-	 * 
-	 * if (claim.getClaimNumber() == null ||
-	 * claim.getClaimNumber().trim().isEmpty()) { addFieldError("claimNumber",
-	 * "Claim Number is required"); }
-	 * 
-	 * if (claim.getAccidentAddress() == null ||
-	 * claim.getAccidentAddress().trim().isEmpty()) {
-	 * addFieldError("accidentAddress", "Accident Address is required"); }
-	 * 
-	 * if (claim.getClaimantName() == null ||
-	 * claim.getClaimantName().trim().isEmpty()) { addFieldError("claimantName",
-	 * "Claimant Name is required"); }
-	 * 
-	 * // Accident Date Validation if (claim.getAccidentDate() == null) {
-	 * addFieldError("accidentDate", "Accident Date is required"); } else if
-	 * (claim.getAccidentDate().after(today)) { addFieldError("accidentDate",
-	 * "Accident date cannot be in the future"); }
-	 * 
-	 * // Claimant DOB Validation if (claim.getClaimantDob() == null) {
-	 * addFieldError("claimantDob", "Date of Birth is required"); } else { if
-	 * (claim.getClaimantDob().after(today)) { addFieldError("claimantDob",
-	 * "Date of Birth cannot be in the future"); } else {
-	 * 
-	 * // Age Calculation long ageInMillis = today.getTime() -
-	 * claim.getClaimantDob().getTime(); long years = ageInMillis / (1000L * 60 * 60
-	 * * 24 * 365);
-	 * 
-	 * if (years < 18) { addFieldError("claimantDob",
-	 * "Claimant must be at least 18 years old"); } } } }
-	 */
-   
+	public String saveClaim() {
 
-    public String listClaims() {
-        claims = claimService.getAllClaims();
-        return SUCCESS;
-    }
+		if (hasFieldErrors()) {
+			return INPUT;
+		}
 
-    public String editClaim() {
-        claim = claimService.getClaimById(id);
-        return SUCCESS;
-    }
+		HttpSession session = ServletActionContext.getRequest().getSession();
+		User user = (User) session.getAttribute("user");
 
-    public String updateClaim() {
-        HttpSession session = ServletActionContext.getRequest().getSession();
-        User user = (User) session.getAttribute("user");
+		if (user != null && "CSR".equalsIgnoreCase(user.getRole())) {
+			claim.setStatus("NEW");
+		}
 
-        if (user != null) {
-            if ("CSR".equalsIgnoreCase(user.getRole()) && "NEW".equalsIgnoreCase(claim.getStatus())) {
-               
-            } else if ("MANAGER".equalsIgnoreCase(user.getRole())) {
-               
-                claim.setStatus("OPEN");
-            } else {
-                return ERROR; 
-            }
-        }
+		claimService.saveClaim(claim);
+		return SUCCESS;
+	}
 
-        claimService.updateClaim(claim);
-        return SUCCESS;
-    }
+	public String listClaims() {
+		claims = claimService.getAllClaims();
+		return SUCCESS;
+	}
 
-    public String deleteClaim() {
-        claimService.deleteClaim(id);
-        return SUCCESS;
-    }
+	public String editClaim() {
+		claim = claimService.getClaimById(id);
+		return SUCCESS;
+	}
 
-    public String approveClaim() {
-        Claim existingClaim = claimService.getClaimById(id);
-        existingClaim.setStatus("APPROVED");
-        claimService.updateClaim(existingClaim);
-       
+	public String updateClaim() {
+		HttpSession session = ServletActionContext.getRequest().getSession();
+		User user = (User) session.getAttribute("user");
 
-        return SUCCESS;
-    }
-    
-    
+		if (user != null) {
+			if ("CSR".equalsIgnoreCase(user.getRole()) && "NEW".equalsIgnoreCase(claim.getStatus())) {
 
-    public String submitClaim() {
+			} else if ("MANAGER".equalsIgnoreCase(user.getRole())) {
 
-        HttpSession session = ServletActionContext.getRequest().getSession();
-        User user = (User) session.getAttribute("user");
+				claim.setStatus("OPEN");
+			} else {
+				return ERROR;
+			}
+		}
 
-        if (user != null && "CSR".equalsIgnoreCase(user.getRole())) {
+		claimService.updateClaim(claim);
+		return SUCCESS;
+	}
 
-            Claim existingClaim = claimService.getClaimById(id);
+	public String deleteClaim() {
+		claimService.deleteClaim(id);
+		return SUCCESS;
+	}
 
-            if (existingClaim != null && "NEW".equalsIgnoreCase(existingClaim.getStatus())) {
+	public String approveClaim() {
+		Claim existingClaim = claimService.getClaimById(id);
+		existingClaim.setStatus("APPROVED");
+		claimService.updateClaim(existingClaim);
 
-                existingClaim.setStatus("OPEN");
-                claimService.updateClaim(existingClaim);
+		return SUCCESS;
+	}
 
-                System.out.println("Claim submitted: " + existingClaim.getId() +
-                        " by user: " + user.getUsername());
-            }
-        }
+	public String submitClaim() {
 
-        return SUCCESS;
-    }
+		HttpSession session = ServletActionContext.getRequest().getSession();
+		User user = (User) session.getAttribute("user");
 
-    public void setClaim(Claim claim) { this.claim = claim; }
-    public Claim getClaim() { return claim; }
+		if (user != null && "CSR".equalsIgnoreCase(user.getRole())) {
 
-    public List<Claim> getClaims() { return claims; }
-    public void setClaims(List<Claim> claims) { this.claims = claims; }
+			Claim existingClaim = claimService.getClaimById(id);
 
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+			if (existingClaim != null && "NEW".equalsIgnoreCase(existingClaim.getStatus())) {
+
+				existingClaim.setStatus("OPEN");
+				claimService.updateClaim(existingClaim);
+
+				System.out.println("Claim submitted: " + existingClaim.getId() + " by user: " + user.getUsername());
+			}
+		}
+
+		return SUCCESS;
+	}
+
+	public void setClaim(Claim claim) {
+		this.claim = claim;
+	}
+
+	public Claim getClaim() {
+		return claim;
+	}
+
+	public List<Claim> getClaims() {
+		return claims;
+	}
+
+	public void setClaims(List<Claim> claims) {
+		this.claims = claims;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
 }
