@@ -1,5 +1,15 @@
+<%@ page import="com.claim.model.User"%>
 <%@ page contentType="text/html;charset=UTF-8"%>
 <%@ taglib prefix="s" uri="/struts-tags"%>
+
+<%
+User user = (User) session.getAttribute("user");
+
+if(user == null){
+    response.sendRedirect("unauthorized.jsp");
+    return;
+}
+%>
 
 <!DOCTYPE html>
 <html>
@@ -8,237 +18,160 @@
 <title>Claim Form</title>
 
 <link rel="stylesheet"
- href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <style>
-
-.field-error{
-    color:red;
-    font-size:14px;
-    margin-top:3px;
+.field-error {
+	color: red;
+	font-size: 14px;
+	margin-top: 3px;
 }
-
 </style>
 
 </head>
 
 <body class="container mt-4">
 
-<h2>Create / Edit Claim</h2>
+	<h2>Create / Edit Claim</h2>
 
-<input type="hidden" id="id">
+	<input type="hidden" id="id">
 
-<div class="card p-4">
+	<div class="card p-4">
 
-<label>Accident Date</label>
-<input type="date" id="accidentDate" class="form-control">
-<div class="field-error" id="accidentDateError"></div>
-<br>
+		<label>Claim Number</label> <input type="text" id="claimNumber"
+			class="form-control">
+		<div class="field-error" id="claimNumberError"></div>
 
-<label>Accident Address</label>
-<input type="text" id="accidentAddress" class="form-control">
-<div class="field-error" id="accidentAddressError"></div>
-<br>
+		<br> <label>Accident Date</label> <input type="date"
+			id="accidentDate" class="form-control">
+		<div class="field-error" id="accidentDateError"></div>
 
-<label>Claimant Name</label>
-<input type="text" id="claimantName" class="form-control">
-<div class="field-error" id="claimantNameError"></div>
-<br>
+		<br> <label>Accident Address</label> <input type="text"
+			id="accidentAddress" class="form-control">
+		<div class="field-error" id="accidentAddressError"></div>
 
-<label>Claimant DOB</label>
-<input type="date" id="claimantDob" class="form-control">
-<div class="field-error" id="claimantDobError"></div>
-<br>
+		<br> <label>Claimant Name</label> <input type="text"
+			id="claimantName" class="form-control">
+		<div class="field-error" id="claimantNameError"></div>
 
-<button type="button" class="btn btn-success" onclick="saveOrUpdate()">Save</button>
-<a href="claimList.jsp" class="btn btn-secondary">Back</a>
+		<br> <label>Claimant DOB</label> <input type="date"
+			id="claimantDob" class="form-control">
+		<div class="field-error" id="claimantDobError"></div>
 
-</div>
+		<br>
 
-<script>
+		<button type="button" class="btn btn-success" onclick="saveOrUpdate()">Save</button>
+		<a href="claimList.jsp" class="btn btn-secondary">Back</a>
 
-$(document).ready(function(){
+	</div>
 
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get("id");
 
-    if(id){
-        loadClaim(id);
-    }
+	<script>
+		$(document).ready(function() {
 
-});
+			const params = new URLSearchParams(window.location.search);
+			const id = params.get("id");
 
+			if (id) {
+				loadClaim(id);
+			}
 
-function loadClaim(id){
+		});
 
-    $.ajax({
+		function loadClaim(id) {
 
-        url:"getClaimById.action",
-        data:{id:id},
+			$.ajax({
 
-        success:function(c){
+				url : "getClaimById.action",
+				data : {
+					id : id
+				},
 
-            console.log("Loaded claim:",c);
+				success : function(res) {
 
-            $("#id").val(c.id);
-            $("#accidentAddress").val(c.accidentAddress);
-            $("#claimantName").val(c.claimantName);
+					let c = res.claim || res;
 
-            if(c.accidentDate)
-                $("#accidentDate").val(c.accidentDate.split("T")[0]);
+					$("#id").val(c.id);
+					$("#claimNumber").val(c.claimNumber);
+					$("#accidentAddress").val(c.accidentAddress);
+					$("#claimantName").val(c.claimantName);
 
-            if(c.claimantDob)
-                $("#claimantDob").val(c.claimantDob.split("T")[0]);
+					// make claim number readonly during edit
+					$("#claimNumber").prop("readonly", true);
 
-        }
+					if (c.accidentDate) {
+						$("#accidentDate").val(c.accidentDate.split("T")[0]);
+					}
 
-    });
+					if (c.claimantDob) {
+						$("#claimantDob").val(c.claimantDob.split("T")[0]);
+					}
 
-}
+				}
 
+			});
 
-function clearErrors(){
-    $(".field-error").text("");
-}
+		}
 
+		function clearErrors() {
+			$(".field-error").text("");
+		}
 
-function validateForm(){
+		function saveOrUpdate() {
 
-    clearErrors();
+			clearErrors();
 
-    let valid = true;
+			let id = $("#id").val();
+			let url = id ? "updateClaim.action" : "saveClaim.action";
 
-    let accidentDate = $("#accidentDate").val();
-    let accidentAddress = $("#accidentAddress").val().trim();
-    let claimantName = $("#claimantName").val().trim();
-    let claimantDob = $("#claimantDob").val();
+			$.ajax({
 
-    let today = new Date();
-    today.setHours(0,0,0,0);
+				url : url,
+				type : "POST",
 
+				data : {
+					"claim.id" : id,
+					"claim.claimNumber" : $("#claimNumber").val(),
+					"claim.accidentAddress" : $("#accidentAddress").val(),
+					"claim.accidentDate" : $("#accidentDate").val(),
+					"claim.claimantName" : $("#claimantName").val(),
+					"claim.claimantDob" : $("#claimantDob").val()
+				},
 
-    if(accidentAddress === ""){
-        $("#accidentAddressError").text("Accident Address is required");
-        valid = false;
-    }
+				success : function(res) {
 
-    if(claimantName === ""){
-        $("#claimantNameError").text("Claimant Name is required");
-        valid = false;
-    }
+					if (res.apiResponse && res.apiResponse.success === false) {
 
-    if(accidentDate === ""){
-        $("#accidentDateError").text("Accident Date is required");
-        valid = false;
-    }
-    else{
+						if (res.apiResponse.fieldErrors) {
 
-        let accDate = new Date(accidentDate);
+							$.each(res.apiResponse.fieldErrors, function(field,
+									messages) {
 
-        if(accDate > today){
-            $("#accidentDateError").text("Accident date cannot be in the future");
-            valid = false;
-        }
+								let fieldName = field.split(".")[1];
+								$("#" + fieldName + "Error").text(messages[0]);
 
-    }
+							});
 
-    if(claimantDob === ""){
-        $("#claimantDobError").text("Date of Birth is required");
-        valid = false;
-    }
-    else{
+						}
 
-        let dob = new Date(claimantDob);
+						return;
+					}
 
-        if(dob > today){
-            $("#claimantDobError").text("Date of Birth cannot be in the future");
-            valid = false;
-        }
-        else{
+					alert("Claim saved successfully");
+					window.location = "claimList.jsp";
 
-            let age = today.getFullYear() - dob.getFullYear();
-            let m = today.getMonth() - dob.getMonth();
+				},
 
-            if(m < 0 || (m === 0 && today.getDate() < dob.getDate())){
-                age--;
-            }
+				error : function() {
+					alert("Something went wrong");
+				}
 
-            if(age < 18){
-                $("#claimantDobError").text("Claimant must be at least 18 years old");
-                valid = false;
-            }
+			});
 
-        }
-
-    }
-
-    return valid;
-
-}
-
-
-function saveOrUpdate(){
-
-    if(!validateForm()){
-        return;
-    }
-
-    console.log("Submitting form...");
-
-    let id = $("#id").val();
-    let url = id ? "updateClaim.action" : "saveClaim.action";
-
-
-    $.ajax({
-
-        url:url,
-        type:"POST",
-
-        data:{
-
-            "claim.id":id,
-            "claim.accidentAddress":$("#accidentAddress").val(),
-            "claim.accidentDate":$("#accidentDate").val(),
-            "claim.claimantName":$("#claimantName").val(),
-            "claim.claimantDob":$("#claimantDob").val()
-
-        },
-
-        success:function(res){
-
-            console.log("Response:",res);
-
-            if(res.fieldErrors){
-
-                $.each(res.fieldErrors,function(field,messages){
-
-                    let fieldName = field.split(".")[1];
-                    $("#"+fieldName+"Error").text(messages[0]);
-
-                });
-
-            }
-            else{
-
-                alert("Claim saved successfully");
-                window.location="claimList.jsp";
-
-            }
-
-        },
-
-        error:function(err){
-            console.log("Error:",err);
-            alert("Something went wrong");
-        }
-
-    });
-
-}
-
-</script>
+		}
+	</script>
 
 </body>
 </html>

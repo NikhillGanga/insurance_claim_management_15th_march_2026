@@ -2,11 +2,23 @@ package com.claim.model;
 
 
 
-import javax.persistence.*;
 import java.util.Date;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.PostPersist;
+import javax.persistence.Table;
+
+//✅ CORRECT
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 @Entity
 @Table(name = "claims")
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE) // Enable 2nd level cache
+
 public class Claim {
 
 	@Id

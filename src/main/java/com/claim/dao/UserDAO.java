@@ -4,6 +4,8 @@ import com.claim.model.User;
 
 public interface UserDAO {
 
-User login(String username,String password);
+User login(String username);
+
+void save(User user);
 
 }
