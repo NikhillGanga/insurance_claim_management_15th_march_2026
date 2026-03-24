@@ -1,15 +1,17 @@
 package com.claim.action;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.http.HttpSession;
 
+import org.apache.log4j.Logger;
 import org.apache.struts2.ServletActionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.claim.dto.ApiResponse;
 import com.claim.model.Claim;
 import com.claim.model.User;
 import com.claim.service.ClaimService;
@@ -18,145 +20,213 @@ import com.opensymphony.xwork2.ActionSupport;
 @Component
 public class ClaimAction extends ActionSupport {
 
-    private Claim claim;
-    private List<Claim> claims;
-    private int id;
-   
+	private Claim claim;
+	private List<Claim> claims;
+	private int id;
 
-    @Autowired
-    private ClaimService claimService;
-    
-    public Map<String, List<String>> getFieldErrors() {
-        return super.getFieldErrors();
-    }
- 
-    public String saveClaim() {
-    	
-    	if (hasFieldErrors()) {
-            return INPUT;
-        }
-    	
-        HttpSession session = ServletActionContext.getRequest().getSession();
-        User user = (User) session.getAttribute("user");
+	private static final Logger logger = Logger.getLogger(ClaimAction.class);
+	@Autowired
+	private ClaimService claimService;
+	@Autowired
+	private ApiResponse apiResponse;
 
-        if (user != null && "CSR".equalsIgnoreCase(user.getRole())) {
-            claim.setStatus("NEW"); 
-        }
+	public String saveClaim() {
 
-        claimService.saveClaim(claim);
-        return SUCCESS;
-    }
-    
-  
-	/*
-	 * public void validateSaveClaim() {
-	 * 
-	 * Date today = new Date();
-	 * 
-	 * if (claim.getClaimNumber() == null ||
-	 * claim.getClaimNumber().trim().isEmpty()) { addFieldError("claimNumber",
-	 * "Claim Number is required"); }
-	 * 
-	 * if (claim.getAccidentAddress() == null ||
-	 * claim.getAccidentAddress().trim().isEmpty()) {
-	 * addFieldError("accidentAddress", "Accident Address is required"); }
-	 * 
-	 * if (claim.getClaimantName() == null ||
-	 * claim.getClaimantName().trim().isEmpty()) { addFieldError("claimantName",
-	 * "Claimant Name is required"); }
-	 * 
-	 * // Accident Date Validation if (claim.getAccidentDate() == null) {
-	 * addFieldError("accidentDate", "Accident Date is required"); } else if
-	 * (claim.getAccidentDate().after(today)) { addFieldError("accidentDate",
-	 * "Accident date cannot be in the future"); }
-	 * 
-	 * // Claimant DOB Validation if (claim.getClaimantDob() == null) {
-	 * addFieldError("claimantDob", "Date of Birth is required"); } else { if
-	 * (claim.getClaimantDob().after(today)) { addFieldError("claimantDob",
-	 * "Date of Birth cannot be in the future"); } else {
-	 * 
-	 * // Age Calculation long ageInMillis = today.getTime() -
-	 * claim.getClaimantDob().getTime(); long years = ageInMillis / (1000L * 60 * 60
-	 * * 24 * 365);
-	 * 
-	 * if (years < 18) { addFieldError("claimantDob",
-	 * "Claimant must be at least 18 years old"); } } } }
-	 */
-   
+		HttpSession session = ServletActionContext.getRequest().getSession();
+		User user = (User) session.getAttribute("user");
 
-    public String listClaims() {
-        claims = claimService.getAllClaims();
-        return SUCCESS;
-    }
+		if (user != null && "CSR".equalsIgnoreCase(user.getRole())) {
+			claim.setStatus("NEW");
+		}
 
-    public String editClaim() {
-        claim = claimService.getClaimById(id);
-        return SUCCESS;
-    }
+		claimService.saveClaim(claim);
 
-    public String updateClaim() {
-        HttpSession session = ServletActionContext.getRequest().getSession();
-        User user = (User) session.getAttribute("user");
+		logger.info("Save claim started Claimant Number:[" + claim.getClaimNumber() + "]");
 
-        if (user != null) {
-            if ("CSR".equalsIgnoreCase(user.getRole()) && "NEW".equalsIgnoreCase(claim.getStatus())) {
-               
-            } else if ("MANAGER".equalsIgnoreCase(user.getRole())) {
-               
-                claim.setStatus("OPEN");
-            } else {
-                return ERROR; 
-            }
-        }
+		System.out.println("Save Claim");
 
-        claimService.updateClaim(claim);
-        return SUCCESS;
-    }
+		apiResponse.setSuccess(true);
+		apiResponse.setData(claim);
 
-    public String deleteClaim() {
-        claimService.deleteClaim(id);
-        return SUCCESS;
-    }
+		return SUCCESS;
+	}
 
-    public String approveClaim() {
-        Claim existingClaim = claimService.getClaimById(id);
-        existingClaim.setStatus("APPROVED");
-        claimService.updateClaim(existingClaim);
-       
+	public void validateSaveClaim() {
 
-        return SUCCESS;
-    }
-    
-    
+	    if (claim == null) {
+	        return;
+	    }
 
-    public String submitClaim() {
+	    // Claim Number
+	    if (claim.getClaimNumber() == null || claim.getClaimNumber().trim().isEmpty()) {
+	        addFieldError("claim.claimNumber", "Claim Number is required");
+	    }
 
-        HttpSession session = ServletActionContext.getRequest().getSession();
-        User user = (User) session.getAttribute("user");
+	    // Claimant Name
+	    if (claim.getClaimantName() == null || claim.getClaimantName().trim().isEmpty()) {
+	        addFieldError("claim.claimantName", "Claimant Name is required");
+	    }
 
-        if (user != null && "CSR".equalsIgnoreCase(user.getRole())) {
+	    // Accident Address
+	    if (claim.getAccidentAddress() == null || claim.getAccidentAddress().trim().isEmpty()) {
+	        addFieldError("claim.accidentAddress", "Accident Address is required");
+	    }
 
-            Claim existingClaim = claimService.getClaimById(id);
+	    // Accident Date
+	    if (claim.getAccidentDate() == null) {
+	        addFieldError("claim.accidentDate", "Accident Date is required");
+	    } else {
+	        Date today = new Date();
 
-            if (existingClaim != null && "NEW".equalsIgnoreCase(existingClaim.getStatus())) {
+	        if (claim.getAccidentDate().after(today)) {
+	            addFieldError("claim.accidentDate", "Future accident date is not allowed");
+	        }
+	    }
 
-                existingClaim.setStatus("OPEN");
-                claimService.updateClaim(existingClaim);
+	    // Claimant DOB
+	    if (claim.getClaimantDob() == null) {
+	        addFieldError("claim.claimantDob", "Claimant DOB is required");
+	    } else {
 
-                System.out.println("Claim submitted: " + existingClaim.getId() +
-                        " by user: " + user.getUsername());
-            }
-        }
+	        Calendar today = Calendar.getInstance();
+	        Calendar dob = Calendar.getInstance();
+	        dob.setTime(claim.getClaimantDob());
 
-        return SUCCESS;
-    }
+	        int age = today.get(Calendar.YEAR) - dob.get(Calendar.YEAR);
 
-    public void setClaim(Claim claim) { this.claim = claim; }
-    public Claim getClaim() { return claim; }
+	        if (today.get(Calendar.DAY_OF_YEAR) < dob.get(Calendar.DAY_OF_YEAR)) {
+	            age--;
+	        }
 
-    public List<Claim> getClaims() { return claims; }
-    public void setClaims(List<Claim> claims) { this.claims = claims; }
+	        if (age < 18) {
+	            addFieldError("claim.claimantDob", "Claimant must be at least 18 years old");
+	        }
+	    }
 
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+	    // return validation errors to UI
+	    if (hasFieldErrors()) {
+	        apiResponse.setSuccess(false);
+	        apiResponse.setFieldErrors(getFieldErrors());
+	    }
+	}
+
+	public String listClaims() {
+		claims = claimService.getAllClaims();
+		return SUCCESS;
+	}
+
+	public String editClaim() {
+		claim = claimService.getClaimById(id);
+		logger.info("Edited claim by MANAGER Claimant Number:[" + claim.getClaimNumber() + "]");
+		return SUCCESS;
+	}
+
+	public String updateClaim() {
+
+	    HttpSession session = ServletActionContext.getRequest().getSession();
+	    User user = (User) session.getAttribute("user");
+
+	    // fetch existing claim from DB
+	    Claim existingClaim = claimService.getClaimById(claim.getId());
+
+	    if (existingClaim == null) {
+	        return ERROR;
+	    }
+
+	    // preserve claimNumber (cannot be edited)
+	    claim.setClaimNumber(existingClaim.getClaimNumber());
+
+	    if (user != null) {
+
+	        if ("CSR".equalsIgnoreCase(user.getRole())) {
+
+	            claim.setStatus("NEW");
+	            logger.info("Updated claim by CSR Claim Number:[" + existingClaim.getClaimNumber() + "]");
+
+	        } 
+	        else if ("MANAGER".equalsIgnoreCase(user.getRole())) {
+
+	            claim.setStatus("OPEN");
+	            logger.info("Updated claim by MANAGER Claim Number:[" + existingClaim.getClaimNumber() + "]");
+
+	        } 
+	        else {
+	            return ERROR;
+	        }
+	    }
+
+	    claimService.updateClaim(claim);
+
+	    apiResponse.setSuccess(true);
+	    apiResponse.setData(claim);
+
+	    return SUCCESS;
+	}
+	public String deleteClaim() {
+		claimService.deleteClaim(id);
+		logger.info("Deleted claim by MANAGER Claimant Number:[" + claim.getClaimNumber() + "]");
+		return SUCCESS;
+	}
+
+	public String approveClaim() {
+		Claim existingClaim = claimService.getClaimById(id);
+		existingClaim.setStatus("APPROVED");
+		claimService.updateClaim(existingClaim);
+		logger.info("Approved claim by MANAGER Claimant Number:[" + claim.getClaimNumber() + "]");
+
+		return SUCCESS;
+	}
+
+	public String submitClaim() {
+
+		HttpSession session = ServletActionContext.getRequest().getSession();
+		User user = (User) session.getAttribute("user");
+
+		if (user != null && "CSR".equalsIgnoreCase(user.getRole())) {
+
+			Claim existingClaim = claimService.getClaimById(id);
+
+			if (existingClaim != null && "NEW".equalsIgnoreCase(existingClaim.getStatus())) {
+
+				existingClaim.setStatus("OPEN");
+				claimService.updateClaim(existingClaim);
+
+				logger.info("Submitted claim by MANAGER Claimant Number:[" + claim.getClaimNumber() + "]");
+				logger.info("Status changed to OPEN by CSR Claimant Number:[" + claim.getClaimNumber() + "]");
+
+				System.out.println("Claim submitted: " + existingClaim.getId() + " by user: " + user.getUsername());
+			}
+		}
+
+		return SUCCESS;
+	}
+
+	public void setClaim(Claim claim) {
+		this.claim = claim;
+	}
+
+	public Claim getClaim() {
+		return claim;
+	}
+
+	public List<Claim> getClaims() {
+		return claims;
+	}
+
+	public void setClaims(List<Claim> claims) {
+		this.claims = claims;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public ApiResponse getApiResponse() {
+		return apiResponse;
+	}
+
 }

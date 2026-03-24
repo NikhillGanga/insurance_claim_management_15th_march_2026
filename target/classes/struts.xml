@@ -4,114 +4,104 @@
 
 <struts>
 
-    <constant name="struts.devMode" value="false"/>
+    <constant name="struts.devMode" value="true"/>
     <constant name="struts.objectFactory" value="spring"/>
+    <constant name="struts.enable.DynamicMethodInvocation" value="false"/>
+    <constant name="struts.tiles.definitionConfigFiles" value="/WEB-INF/tiles.xml"/>
 
-    <package name="default" namespace="/" extends="json-default">
+    <package name="default" namespace="/" extends="struts-default,json-default">
 
+        <result-types>
+            <result-type name="tiles" class="org.apache.struts2.views.tiles.TilesResult"/>
+        </result-types>
 
         <interceptors>
-
-            <interceptor name="authInterceptor"
-                class="com.claim.interceptor.AuthInterceptor"/>
+            <interceptor name="authInterceptor" class="com.claim.interceptor.AuthInterceptor"/>
+            <interceptor name="roleInterceptor" class="com.claim.interceptor.RoleInterceptor"/>
 
             <interceptor-stack name="authStack">
                 <interceptor-ref name="authInterceptor"/>
                 <interceptor-ref name="defaultStack"/>
             </interceptor-stack>
-
         </interceptors>
 
         <default-interceptor-ref name="authStack"/>
 
+        <global-results>
+            <result name="login">/login.jsp</result>
+            <result name="unauthorized">/unauthorized.jsp</result>
+        </global-results>
 
+        <action name="login" class="com.claim.action.LoginAction" method="login">
+            <result type="json"/>
+        </action>
 
-        <action name="login"
-                class="com.claim.action.LoginAction"
-                method="login">
+        <action name="logout" class="com.claim.action.LoginAction" method="logout">
+            <result type="json"/>
+        </action>
 
+        <action name="saveClaim" class="com.claim.action.ClaimAction" method="saveClaim">
+            <interceptor-ref name="roleInterceptor"/>
             <interceptor-ref name="defaultStack"/>
-
-            <result type="json"/>
-
-        </action>
-
-
-
-        <action name="logout"
-                class="com.claim.action.LoginAction"
-                method="logout">
-
-            <result type="json"/>
-
-        </action>
-
-
-
-        <action name="saveClaim" class="com.claim.action.ClaimAction">
-
-    <result name="success" type="json"/>
-    <result name="input" type="json"/>
-
-</action>
-
-
-
-        <action name="getAllClaims"
-                class="com.claim.action.ClaimAction"
-                method="listClaims">
-
-            <result type="json"/>
-
-        </action>
-
-
-
-        <action name="getClaimById"
-                class="com.claim.action.ClaimAction"
-                method="editClaim">
-
             <result type="json">
-                <param name="root">claim</param>
+                <param name="root">apiResponse</param>
             </result>
-
+            <result name="input" type="json">
+                <param name="root">apiResponse</param>
+            </result>
         </action>
 
-
-
-        <action name="updateClaim"
-                class="com.claim.action.ClaimAction"
-                method="updateClaim">
-
+        <action name="getAllClaims" class="com.claim.action.ClaimAction" method="listClaims">
+            <interceptor-ref name="roleInterceptor">
+                <param name="allowedRole">CSR</param>
+            </interceptor-ref>
+            <interceptor-ref name="roleInterceptor">
+                <param name="allowedRole">MANAGER</param>
+            </interceptor-ref>
             <result type="json"/>
-
         </action>
 
-
-
-        <action name="deleteClaim"
-                class="com.claim.action.ClaimAction"
-                method="deleteClaim">
-
+        <action name="getClaimById" class="com.claim.action.ClaimAction" method="editClaim">
             <result type="json"/>
-
         </action>
 
-
-
-        <action name="approveClaim"
-                class="com.claim.action.ClaimAction"
-                method="approveClaim">
-
+        <action name="updateClaim" class="com.claim.action.ClaimAction" method="updateClaim">
             <result type="json"/>
-          </action>
-          
-           <action name="submitClaim"
-                class="com.claim.action.ClaimAction"
-                method="submitClaim">
-                
-                <result type="json"/>
-                </action>
+        </action>
+
+        <action name="editClaim" class="com.claim.action.ClaimAction" method="editClaim">
+            <result type="json"/>
+        </action>
+
+        <action name="deleteClaim" class="com.claim.action.ClaimAction" method="deleteClaim">
+            <result type="json"/>
+        </action>
+
+        <action name="submitClaim" class="com.claim.action.ClaimAction" method="submitClaim">
+            <interceptor-ref name="roleInterceptor">
+                <param name="allowedRole">CSR</param>
+            </interceptor-ref>
+            <result type="json"/>
+        </action>
+
+        <action name="approveClaim" class="com.claim.action.ClaimAction" method="approveClaim">
+            <interceptor-ref name="roleInterceptor">
+                <param name="allowedRole">MANAGER</param>
+            </interceptor-ref>
+            <result type="json"/>
+        </action>
+
+        <action name="createUser" class="com.claim.action.LoginAction" method="createUser">
+            <result type="json"/>
+        </action>
+
+        <action name="report" class="com.claim.action.ReportAction">
+            <result name="none" type="stream"/>
+        </action>
+
+        <action name="dashboard" class="com.claim.action.ClaimAction">
+            <result name="success" type="tiles">claimDashboard</result>
+        </action>
 
     </package>
 

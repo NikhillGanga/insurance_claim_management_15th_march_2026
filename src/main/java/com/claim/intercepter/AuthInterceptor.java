@@ -2,9 +2,9 @@ package com.claim.intercepter;
 
 import java.util.Map;
 
+import com.opensymphony.xwork2.ActionContext;
 import com.opensymphony.xwork2.ActionInvocation;
 import com.opensymphony.xwork2.interceptor.AbstractInterceptor;
-import com.opensymphony.xwork2.ActionContext;
 
 public class AuthInterceptor extends AbstractInterceptor {
 

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+ <ehcache>
+                    <defaultCache
+                        maxEntriesLocalHeap="1000"
+                        eternal="false"
+                        timeToIdleSeconds="300"
+                        timeToLiveSeconds="600"/>
+
+                    <cache name="com.claim.action.Claim"
+                        maxEntriesLocalHeap="500"
+                        timeToIdleSeconds="300"
+                        timeToLiveSeconds="600"/>
+                </ehcache>

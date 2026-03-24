@@ -2,6 +2,8 @@ package com.claim.dao;
 
 import java.util.List;
 
+import org.hibernate.query.Query;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.springframework.stereotype.Repository;
@@ -29,7 +31,11 @@ public class ClaimDAOImpl implements ClaimDAO {
 
         Session session = HibernateUtil.getSessionFactory().openSession();
 
-        List<Claim> list = session.createQuery("from Claim order by id desc", Claim.class).list();
+        Query<Claim> query = session.createQuery("from Claim order by id desc", Claim.class);
+        
+        query.setCacheable(true); // ✅ enable query cache BEFORE execution
+
+        List<Claim> list = query.list();
 
         session.close();
 

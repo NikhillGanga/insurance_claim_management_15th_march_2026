@@ -1,5 +1,15 @@
+<%@ page import="com.claim.model.User"%>
 <%@ page contentType="text/html;charset=UTF-8"%>
 <%@ taglib prefix="s" uri="/struts-tags"%>
+
+<%
+User user = (User) session.getAttribute("user");
+
+if(user == null){
+    response.sendRedirect("unauthorized.jsp");
+    return;
+}
+%>
 
 <!DOCTYPE html>
 <html>
@@ -8,15 +18,15 @@
 <title>Claim Form</title>
 
 <link rel="stylesheet"
- href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <style>
-.field-error{
-    color:red;
-    font-size:14px;
-    margin-top:3px;
+.field-error {
+	color: red;
+	font-size: 14px;
+	margin-top: 3px;
 }
 </style>
 
@@ -24,134 +34,144 @@
 
 <body class="container mt-4">
 
-<h2>Create / Edit Claim</h2>
+	<h2>Create / Edit Claim</h2>
 
-<input type="hidden" id="id">
+	<input type="hidden" id="id">
 
-<div class="card p-4">
+	<div class="card p-4">
 
-<label>Claim Number</label>
-<input type="text" id="claimNumber" class="form-control">
-<div class="field-error" id="claimNumberError"></div>
-<br>
+		<label>Claim Number</label> <input type="text" id="claimNumber"
+			class="form-control">
+		<div class="field-error" id="claimNumberError"></div>
 
-<label>Accident Date</label>
-<input type="date" id="accidentDate" class="form-control">
-<div class="field-error" id="accidentDateError"></div>
-<br>
+		<br> <label>Accident Date</label> <input type="date"
+			id="accidentDate" class="form-control">
+		<div class="field-error" id="accidentDateError"></div>
 
-<label>Accident Address</label>
-<input type="text" id="accidentAddress" class="form-control">
-<div class="field-error" id="accidentAddressError"></div>
-<br>
+		<br> <label>Accident Address</label> <input type="text"
+			id="accidentAddress" class="form-control">
+		<div class="field-error" id="accidentAddressError"></div>
 
-<label>Claimant Name</label>
-<input type="text" id="claimantName" class="form-control">
-<div class="field-error" id="claimantNameError"></div>
-<br>
+		<br> <label>Claimant Name</label> <input type="text"
+			id="claimantName" class="form-control">
+		<div class="field-error" id="claimantNameError"></div>
 
-<label>Claimant DOB</label>
-<input type="date" id="claimantDob" class="form-control">
-<div class="field-error" id="claimantDobError"></div>
-<br>
+		<br> <label>Claimant DOB</label> <input type="date"
+			id="claimantDob" class="form-control">
+		<div class="field-error" id="claimantDobError"></div>
 
-<button class="btn btn-success" onclick="saveOrUpdate()">Save</button>
-<a href="claimList.jsp" class="btn btn-secondary">Back</a>
+		<br>
 
-</div>
+		<button type="button" class="btn btn-success" onclick="saveOrUpdate()">Save</button>
+		<a href="claimList.jsp" class="btn btn-secondary">Back</a>
 
-<script>
+	</div>
 
-$(document).ready(function(){
 
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get("id");
+	<script>
+		$(document).ready(function() {
 
-    if(id){
-        loadClaim(id);
-    }
+			const params = new URLSearchParams(window.location.search);
+			const id = params.get("id");
 
-});
+			if (id) {
+				loadClaim(id);
+			}
 
-function loadClaim(id){
+		});
 
-    $.ajax({
+		function loadClaim(id) {
 
-        url:"getClaimById.action",
+			$.ajax({
 
-        data:{id:id},
+				url : "getClaimById.action",
+				data : {
+					id : id
+				},
 
-        success:function(c){
+				success : function(res) {
 
-            $("#id").val(c.id);
-            $("#claimNumber").val(c.claimNumber);
-            $("#accidentAddress").val(c.accidentAddress);
-            $("#claimantName").val(c.claimantName);
+					let c = res.claim || res;
 
-            if(c.accidentDate)
-                $("#accidentDate").val(c.accidentDate.split("T")[0]);
+					$("#id").val(c.id);
+					$("#claimNumber").val(c.claimNumber);
+					$("#accidentAddress").val(c.accidentAddress);
+					$("#claimantName").val(c.claimantName);
 
-            if(c.claimantDob)
-                $("#claimantDob").val(c.claimantDob.split("T")[0]);
+					// make claim number readonly during edit
+					$("#claimNumber").prop("readonly", true);
 
-        }
+					if (c.accidentDate) {
+						$("#accidentDate").val(c.accidentDate.split("T")[0]);
+					}
 
-    });
+					if (c.claimantDob) {
+						$("#claimantDob").val(c.claimantDob.split("T")[0]);
+					}
 
-}
+				}
 
-function clearErrors(){
-    $(".field-error").text("");
-}
+			});
 
-function saveOrUpdate(){
+		}
 
-    clearErrors();
+		function clearErrors() {
+			$(".field-error").text("");
+		}
 
-    let id = $("#id").val();
-    let url = id ? "updateClaim.action" : "saveClaim.action";
+		function saveOrUpdate() {
 
-    $.ajax({
+			clearErrors();
 
-        url:url,
+			let id = $("#id").val();
+			let url = id ? "updateClaim.action" : "saveClaim.action";
 
-        type:"POST",
+			$.ajax({
 
-        data:{
+				url : url,
+				type : "POST",
 
-            "claim.id":id,
-            "claim.claimNumber":$("#claimNumber").val(),
-            "claim.accidentAddress":$("#accidentAddress").val(),
-            "claim.accidentDate":$("#accidentDate").val(),
-            "claim.claimantName":$("#claimantName").val(),
-            "claim.claimantDob":$("#claimantDob").val()
+				data : {
+					"claim.id" : id,
+					"claim.claimNumber" : $("#claimNumber").val(),
+					"claim.accidentAddress" : $("#accidentAddress").val(),
+					"claim.accidentDate" : $("#accidentDate").val(),
+					"claim.claimantName" : $("#claimantName").val(),
+					"claim.claimantDob" : $("#claimantDob").val()
+				},
 
-        },
+				success : function(res) {
 
-        success:function(res){
+					if (res.apiResponse && res.apiResponse.success === false) {
 
-            if(res.fieldErrors){
+						if (res.apiResponse.fieldErrors) {
 
-                $.each(res.fieldErrors,function(field,messages){
+							$.each(res.apiResponse.fieldErrors, function(field,
+									messages) {
 
-                    let fieldName = field.split(".")[1];
-                    $("#"+fieldName+"Error").text(messages[0]);
+								let fieldName = field.split(".")[1];
+								$("#" + fieldName + "Error").text(messages[0]);
 
-                });
+							});
 
-            }else{
+						}
 
-                window.location="claimList.jsp";
+						return;
+					}
 
-            }
+					alert("Claim saved successfully");
+					window.location = "claimList.jsp";
 
-        }
+				},
 
-    });
+				error : function() {
+					alert("Something went wrong");
+				}
 
-}
+			});
 
-</script>
+		}
+	</script>
 
 </body>
 </html>

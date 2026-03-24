@@ -1,8 +1,9 @@
 <%@ page contentType="text/html;charset=UTF-8"%>
-
+<%@ taglib prefix="s" uri="/struts-tags" %>
 <!DOCTYPE html>
 <html>
 <head>
+
 
 <title>Login</title>
 
@@ -14,6 +15,8 @@
 </head>
 
 <body class="container mt-5">
+
+
 
 	<h2>Insurance Claim Login</h2>
 
@@ -30,33 +33,36 @@
 	</div>
 
 	<script>
-		function login() {
+	function login() {
 
-			$.ajax({
+	    $.ajax({
 
-				url : "login.action",
-				type : "POST",
+	        url: "login.action",
+	        type: "POST",
+	        dataType: "json",
 
-				data : {
-					username : $("#username").val(),
-					password : $("#password").val()
-				},
+	        data: {
+	            username: $("#username").val(),
+	            password: $("#password").val()
+	        },
 
-				success : function() {
+	        success: function(response) {
 
-					window.location = "claimList.jsp";
+	            if(response.success){
+	                window.location = "claimList.jsp";
+	            }else{
+	                $("#msg").text(response.message);
+	            }
 
-				},
+	        },
 
-				error : function() {
+	        error: function() {
+	            $("#msg").text("Server error");
+	        }
 
-					$("#msg").text("Invalid login");
+	    });
 
-				}
-
-			});
-
-		}
+	}
 	</script>
 
 </body>
