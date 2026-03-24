@@ -21,6 +21,9 @@ public class LoginAction extends ActionSupport {
 
     @Autowired
     private UserService userService;
+    
+    
+    private User user;
 
     private static final Logger logger = Logger.getLogger(LoginAction.class);
 
@@ -30,6 +33,9 @@ public class LoginAction extends ActionSupport {
     private static final ConcurrentHashMap<String, LoginAttempt> attemptMap = new ConcurrentHashMap<>();
     private static final int MAX_ATTEMPTS = 5;
     private static final long TIMEOUT_MS = 120_000;
+    
+    
+
 
     public String login() {
 
@@ -47,13 +53,12 @@ public class LoginAction extends ActionSupport {
             }
         }
 
-        User user = userService.login(username, password);
+         user = userService.login(username, password);
         
         logger.debug(user);
 
         if (user != null) {
             attemptMap.remove(username);
-
             HttpSession session = ServletActionContext.getRequest().getSession();
             session.setAttribute("user", user);
 
@@ -83,6 +88,13 @@ public class LoginAction extends ActionSupport {
             this.count = count;
             this.firstAttemptTime = time;
         }
+    }
+    
+    public String logout()
+    {
+    	HttpSession session = ServletActionContext.getRequest().getSession();
+    	session.invalidate();
+    	return SUCCESS;
     }
 
 	public String getUsername() {
